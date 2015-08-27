@@ -28,7 +28,7 @@
 ros::Publisher pub;
 pcl::visualization::CloudViewer viewer ("Segmentation Viewer");
 
-void cloudPub (const sensor_msgs::PointCloud2ConstPtr& msg)
+void cloudSegmentation (const sensor_msgs::PointCloud2ConstPtr& msg)
 {
     ROS_INFO("convert ros_msg to pcl");
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new
@@ -82,29 +82,6 @@ void cloudPub (const sensor_msgs::PointCloud2ConstPtr& msg)
     pcl::PointCloud <pcl::PointXYZRGB>::Ptr colored_cloud =
                     reg.getColoredCloud ();
     viewer.showCloud( colored_cloud );
-    /*
-    pcl::ModelCoefficients coefficients;
-    pcl::PointIndices inliers;
-
-    ROS_INFO("II creating segmented pointcloud");
-    pcl::SACSegmentation<pcl::PointXYZ> seg;
-    seg.setOptimizeCoefficients(true);
-    seg.setModelType(pcl::SACMODEL_PLANE);
-    seg.setMethodType(pcl::SAC_RANSAC);
-    seg.setDistanceThreshold(0.01);
-
-    seg.setInputCloud( cloud.makeShared() );
-    seg.segment(inliers, coefficients);
-
-    ROS_INFO("III publish segmented pointcloud");
-    pcl_msgs::ModelCoefficients ros_coefficients;
-    pcl_conversions::fromPCL(coefficients, ros_coefficients);
-
-
-
-    //sensor_msgs::PointCloud2 output;
-    //pcl_conversions::fromPCL(seg, output);
-*/
 
     pub.publish(msg);
 }
@@ -114,7 +91,7 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "playground");
   ros::NodeHandle n;
 
-  ros::Subscriber sub = n.subscribe("/rtabmap/cloud_map", 1, cloudPub);
+  ros::Subscriber sub = n.subscribe("/rtabmap/cloud_map", 1, cloudSegmentation);
   pub = n.advertise<sensor_msgs::PointCloud2> ("playground/output", 1);
 
   ros::spin();
