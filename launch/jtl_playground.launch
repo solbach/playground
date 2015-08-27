@@ -5,7 +5,7 @@
 
 <param if="$(arg sim)" name="use_sim_time" value="true" />
 
-<node pkg="playground" type="playground" name="playground">
+<node pkg="playground" type="playground" name="playground"/>
 
 <!-- Visualisation RVIZ -->
 <node pkg="rviz" type="rviz" name="rviz" args="-d $(find playground)/launch/config/jtl_playground.rviz"/>
