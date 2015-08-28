@@ -35,27 +35,15 @@
 
 ros::Publisher pub;
 pcl::visualization::CloudViewer viewer ("Segmentation Viewer");
-//pcl::visualization::CloudViewer grd_viewer ("Ground Viewer");
 
-void cloudSegmentation (const sensor_msgs::PointCloud2ConstPtr& msg)
+
+pcl::PointCloud <pcl::PointXYZ>::Ptr cloudGroundFilterMorphological(
+                                pcl::PointCloud<pcl::PointXYZ>::Ptr cloud)
 {
-    const clock_t t0=clock();
-
-    ROS_INFO("convert ros_msg to pcl");
-    /* base cloud */
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new
-                    pcl::PointCloud<pcl::PointXYZ>());
-    /* convert ros message to base cloud */
-    pcl::fromROSMsg(*msg, *cloud);
-
-//    viewer.showCloud( cloud );
-
-    /* filtered cloud */
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered (new
                     pcl::PointCloud<pcl::PointXYZ>);
     pcl::PointIndicesPtr ground (new pcl::PointIndices);
 
-    ROS_INFO("Ground Filtering");
     /* create filter object and extract ground */
 
     pcl::ProgressiveMorphologicalFilter<pcl::PointXYZ> pmf;
@@ -73,10 +61,12 @@ void cloudSegmentation (const sensor_msgs::PointCloud2ConstPtr& msg)
     extract.setNegative(true);
     extract.filter(*cloud_filtered);
 
-//    viewer.showCloud( cloud_filtered );
+    return cloud_filtered;
+}
 
-//    ROS_INFO("Segmentation");
-    /* create segmentation object */
+pcl::PointCloud <pcl::PointXYZRGB>::Ptr cloudSegmentation(
+                 pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered)
+{
     pcl::search::Search<pcl::PointXYZ>::Ptr tree =
             boost::shared_ptr<pcl::search::Search<pcl::PointXYZ> >
             (new pcl::search::KdTree<pcl::PointXYZ>);
@@ -109,9 +99,6 @@ void cloudSegmentation (const sensor_msgs::PointCloud2ConstPtr& msg)
     std::vector <pcl::PointIndices> clusters;
     reg.extract (clusters);
 
-    std::cout << float( clock () - t0 ) /  CLOCKS_PER_SEC
-              << ", " << msg->width << std::endl;
-
     std::cout << "Number of clusters is equal to " << clusters.size()
               << std::endl;
 
@@ -124,7 +111,32 @@ void cloudSegmentation (const sensor_msgs::PointCloud2ConstPtr& msg)
 
     ROS_INFO("display");
     pcl::PointCloud <pcl::PointXYZRGB>::Ptr segmented_cloud =
-                    reg.getColoredCloud ();
+                    reg.getColoredCloud();
+
+    return segmented_cloud;
+}
+
+void cloudSubscriber (const sensor_msgs::PointCloud2ConstPtr& msg)
+{
+    const clock_t t0=clock();
+    /* base cloud */
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new
+                    pcl::PointCloud<pcl::PointXYZ>());
+    /* convert ros message to base cloud */
+    pcl::fromROSMsg(*msg, *cloud);
+
+    ROS_INFO("Ground Filtering");
+    /* filter cloud */
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered =
+                                        cloudGroundFilterMorphological(cloud);
+
+    ROS_INFO("Segmentation");
+    /* segment cloud */
+    pcl::PointCloud <pcl::PointXYZRGB>::Ptr segmented_cloud =
+                                            cloudSegmentation(cloud_filtered);
+    std::cout << float( clock () - t0 ) /  CLOCKS_PER_SEC
+              << ", " << msg->width << std::endl;
+
     viewer.showCloud( segmented_cloud );
 
     pub.publish(msg);
@@ -135,7 +147,7 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "playground");
   ros::NodeHandle n;
 
-  ros::Subscriber sub = n.subscribe("/rtabmap/cloud_map", 1, cloudSegmentation);
+  ros::Subscriber sub = n.subscribe("/rtabmap/cloud_map", 1, cloudSubscriber);
   pub = n.advertise<sensor_msgs::PointCloud2> ("playground/output", 1);
 
   ros::spin();
