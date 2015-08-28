@@ -7,6 +7,7 @@
 #include "std_msgs/String.h"
 
 /* Specifically for PCL usage */
+/* Segmentation */
 #include "sensor_msgs/PointCloud2.h"
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_cloud.h>
@@ -18,6 +19,10 @@
 #include <pcl/visualization/cloud_viewer.h>
 #include <pcl/filters/passthrough.h>
 #include <pcl/segmentation/region_growing.h>
+
+/* Identifying Ground */
+#include <pcl/filters/extract_indices.h>
+#include <pcl/segmentation/progressive_morphological_filter.h>
 
 /*
 #include <pcl/sample_consensus/model_types.h>
@@ -79,9 +84,9 @@ void cloudSegmentation (const sensor_msgs::PointCloud2ConstPtr& msg)
     }
 
     ROS_INFO("display");
-    pcl::PointCloud <pcl::PointXYZRGB>::Ptr colored_cloud =
+    pcl::PointCloud <pcl::PointXYZRGB>::Ptr segmented_cloud =
                     reg.getColoredCloud ();
-    viewer.showCloud( colored_cloud );
+    viewer.showCloud( segmented_cloud );
 
     pub.publish(msg);
 }

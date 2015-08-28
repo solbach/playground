@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(playground)
 
+
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   roslib
@@ -9,6 +10,9 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_ros
   sensor_msgs
 )
+
+# Min. PCL 1.7.2 due to ProgressiveMorphologicalFilter
+find_package(PCL 1.7.2 REQUIRED)
 
 catkin_package()
 
