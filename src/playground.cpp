@@ -8,6 +8,7 @@
 /* ROS */
 #include "ros/ros.h"
 #include "std_msgs/String.h"
+#include <ros/console.h>
 
 /* PCL */
 /* Segmentation */
@@ -98,49 +99,61 @@ pcl::PointCloud <pcl::PointXYZRGB>::Ptr cloudSegmentation(
     std::vector <pcl::PointIndices> clusters;
     reg.extract (clusters);
 
-    std::cout << "Number of clusters is equal to " << clusters.size()
-              << std::endl;
+//    std::cout << "Number of clusters is equal to " << clusters.size()
+//              << std::endl;
 
-    std::cout << "Points in each cluster... " << clusters.size () << std::endl;
+//    std::cout << "Points in each cluster... " << clusters.size () << std::endl;
 
-    for (int i = 0; i < clusters.size(); ++i) {
-        std::cout << i << ". " << clusters[i].indices.size ()
-                  << " points." << endl;
-    }
+//    for (int i = 0; i < clusters.size(); ++i) {
+//        std::cout << i << ". " << clusters[i].indices.size ()
+//                  << " points." << endl;
+//    }
 
-    ROS_INFO("display");
     pcl::PointCloud <pcl::PointXYZRGB>::Ptr segmented_cloud =
                     reg.getColoredCloud();
 
     return segmented_cloud;
 }
 
-pcl::PointCloud <pcl::PointXYZ>::Ptr cloudGroundFilteringTreshold(
-                 pcl::PointCloud<pcl::PointXYZ>::Ptr cloud)
+void cloudXYZPrint(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud)
 {
-    pcl::PointCloud<pcl::PointXYZ>::Ptr result (new
-                    pcl::PointCloud<pcl::PointXYZ>());
-
-    float treshold = 0.5f;
-
-    std::cout << " going inside! " << std::endl;
-    u_int counter = 0;
     /* Iterate over cloud */
     for (pcl::PointCloud<pcl::PointXYZ>::iterator it = cloud->begin();
          it != cloud->end(); it++)
     {
-        counter ++;
-        std::cout << counter << " -- IN!" << std::endl;
+        std::cout << it->x << ", " << it->y << ", " << it->z
+                  << ", " << std::endl;
+    }
+}
+
+pcl::PointCloud <pcl::PointXYZ>::Ptr cloudGroundFilteringTreshold(
+                 pcl::PointCloud<pcl::PointXYZ>::Ptr cloud)
+{
+    float treshold = 1.2f;
+
+    pcl::PointCloud<pcl::PointXYZ>::Ptr result (new
+                    pcl::PointCloud<pcl::PointXYZ>());
+
+    u_int counter = 0;
+
+    /* Iterate over cloud */
+    for (pcl::PointCloud<pcl::PointXYZ>::iterator it = cloud->begin();
+         it != cloud->end(); it++)
+    {
+        if (it->z > treshold) {
+            counter++;
+            result->push_back( *it);
+        }
     }
 
-    std::cout << "OUT!" << std::endl;
+//    ROS_INFO("SIZE/REJECTED -- %i/%i", cloud->size(), cloud->size() - counter);
 
     return result;
 }
 
 void cloudSubscriber (const sensor_msgs::PointCloud2ConstPtr& msg)
 {
-    //const clock_t t0=clock();
+    const clock_t t0=clock();
     /* base cloud */
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new
                     pcl::PointCloud<pcl::PointXYZ>());
@@ -163,16 +176,23 @@ void cloudSubscriber (const sensor_msgs::PointCloud2ConstPtr& msg)
         cloud_filtered = cloudGroundFilteringTreshold(cloud);
     }
 
-//    ROS_INFO("Segmentation");
-    /* segment cloud */
-//    pcl::PointCloud <pcl::PointXYZRGB>::Ptr segmented_cloud =
-//                                            cloudSegmentation(cloud_filtered);
-//    std::cout << "TIME / SIZE ::: " << float( clock () - t0 ) /  CLOCKS_PER_SEC
-//              << ", " << msg->width << std::endl;
+    if (cloud_filtered->size() > 20)
+    {
+    //    ROS_INFO("Segmentation");
+        /* segment cloud */
+        pcl::PointCloud <pcl::PointXYZRGB>::Ptr segmented_cloud =
+                                                cloudSegmentation(cloud_filtered);
+        std::cout << float( clock () - t0 ) /  CLOCKS_PER_SEC
+                  << ", " << msg->width << std::endl;
 
-//    viewer.showCloud( segmented_cloud );
+        viewer.showCloud( segmented_cloud );
 
-    pub.publish(msg);
+        pub.publish(msg);
+    }
+    else
+    {
+        ROS_WARN("Cloud is too small for Segmentation. Waiting for next iteration.");
+    }
 }
 
 int main(int argc, char **argv)
