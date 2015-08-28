@@ -118,21 +118,29 @@ pcl::PointCloud <pcl::PointXYZRGB>::Ptr cloudSegmentation(
 pcl::PointCloud <pcl::PointXYZ>::Ptr cloudGroundFilteringTreshold(
                  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud)
 {
+    pcl::PointCloud<pcl::PointXYZ>::Ptr result (new
+                    pcl::PointCloud<pcl::PointXYZ>());
+
     float treshold = 0.5f;
 
+    std::cout << " going inside! " << std::endl;
+    u_int counter = 0;
     /* Iterate over cloud */
     for (pcl::PointCloud<pcl::PointXYZ>::iterator it = cloud->begin();
          it != cloud->end(); it++)
     {
-        std::cout << "IN!" << std::endl;
+        counter ++;
+        std::cout << counter << " -- IN!" << std::endl;
     }
 
     std::cout << "OUT!" << std::endl;
+
+    return result;
 }
 
 void cloudSubscriber (const sensor_msgs::PointCloud2ConstPtr& msg)
 {
-    const clock_t t0=clock();
+    //const clock_t t0=clock();
     /* base cloud */
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new
                     pcl::PointCloud<pcl::PointXYZ>());
@@ -152,17 +160,17 @@ void cloudSubscriber (const sensor_msgs::PointCloud2ConstPtr& msg)
     {
 //        ROS_INFO("Ground Filtering Treshold");
         /* filter cloud */
-        cloud_filtered = cloudGroundFilterMorphological(cloud);
+        cloud_filtered = cloudGroundFilteringTreshold(cloud);
     }
 
 //    ROS_INFO("Segmentation");
     /* segment cloud */
-    pcl::PointCloud <pcl::PointXYZRGB>::Ptr segmented_cloud =
-                                            cloudSegmentation(cloud_filtered);
+//    pcl::PointCloud <pcl::PointXYZRGB>::Ptr segmented_cloud =
+//                                            cloudSegmentation(cloud_filtered);
 //    std::cout << "TIME / SIZE ::: " << float( clock () - t0 ) /  CLOCKS_PER_SEC
 //              << ", " << msg->width << std::endl;
 
-    viewer.showCloud( segmented_cloud );
+//    viewer.showCloud( segmented_cloud );
 
     pub.publish(msg);
 }
