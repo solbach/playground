@@ -29,7 +29,12 @@
 ros::Publisher pub;
 pcl::visualization::CloudViewer viewer ("Segmentation Viewer");
 
-uint8_t mode = 0;
+/* Set the mode for ground-elimination */
+/*
+ * 0 = Morphologically
+ * 1 = Treshold
+**/
+uint8_t mode = 1;
 
 pcl::PointCloud <pcl::PointXYZ>::Ptr cloudGroundFilterMorphological(
                                 pcl::PointCloud<pcl::PointXYZ>::Ptr cloud)
@@ -119,8 +124,10 @@ pcl::PointCloud <pcl::PointXYZ>::Ptr cloudGroundFilteringTreshold(
     for (pcl::PointCloud<pcl::PointXYZ>::iterator it = cloud->begin();
          it != cloud->end(); it++)
     {
-
+        std::cout << "IN!" << std::endl;
     }
+
+    std::cout << "OUT!" << std::endl;
 }
 
 void cloudSubscriber (const sensor_msgs::PointCloud2ConstPtr& msg)
@@ -135,24 +142,25 @@ void cloudSubscriber (const sensor_msgs::PointCloud2ConstPtr& msg)
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered (new
                     pcl::PointCloud<pcl::PointXYZ>);
 
-    if (mode == 0) {
-        ROS_INFO("Ground Filtering Morphologicaly");
+    if (mode == 0)
+    {
+//        ROS_INFO("Ground Filtering Morphologicaly");
         /* filter cloud */
         cloud_filtered = cloudGroundFilterMorphological(cloud);
     }
     else if(mode == 1)
     {
-        ROS_INFO("Ground Filtering Treshold");
+//        ROS_INFO("Ground Filtering Treshold");
         /* filter cloud */
         cloud_filtered = cloudGroundFilterMorphological(cloud);
     }
 
-    ROS_INFO("Segmentation");
+//    ROS_INFO("Segmentation");
     /* segment cloud */
     pcl::PointCloud <pcl::PointXYZRGB>::Ptr segmented_cloud =
                                             cloudSegmentation(cloud_filtered);
-    std::cout << "TIME / SIZE ::: " << float( clock () - t0 ) /  CLOCKS_PER_SEC
-              << ", " << msg->width << std::endl;
+//    std::cout << "TIME / SIZE ::: " << float( clock () - t0 ) /  CLOCKS_PER_SEC
+//              << ", " << msg->width << std::endl;
 
     viewer.showCloud( segmented_cloud );
 
