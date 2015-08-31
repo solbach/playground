@@ -99,15 +99,15 @@ pcl::PointCloud <pcl::PointXYZRGB>::Ptr cloudSegmentation(
     std::vector <pcl::PointIndices> clusters;
     reg.extract (clusters);
 
-//    std::cout << "Number of clusters is equal to " << clusters.size()
-//              << std::endl;
+    std::cout << "Number of clusters is equal to " << clusters.size()
+              << std::endl;
 
-//    std::cout << "Points in each cluster... " << clusters.size () << std::endl;
+    std::cout << "Points in each cluster... " << clusters.size () << std::endl;
 
-//    for (int i = 0; i < clusters.size(); ++i) {
-//        std::cout << i << ". " << clusters[i].indices.size ()
-//                  << " points." << endl;
-//    }
+    for (int i = 0; i < clusters.size(); ++i) {
+        std::cout << i << ". " << clusters[i].indices.size ()
+                  << " points." << endl;
+    }
 
     pcl::PointCloud <pcl::PointXYZRGB>::Ptr segmented_cloud =
                     reg.getColoredCloud();
@@ -182,8 +182,8 @@ void cloudSubscriber (const sensor_msgs::PointCloud2ConstPtr& msg)
         /* segment cloud */
         pcl::PointCloud <pcl::PointXYZRGB>::Ptr segmented_cloud =
                                                 cloudSegmentation(cloud_filtered);
-        std::cout << float( clock () - t0 ) /  CLOCKS_PER_SEC
-                  << ", " << msg->width << std::endl;
+//        std::cout << float( clock () - t0 ) /  CLOCKS_PER_SEC
+//                  << ", " << msg->width << std::endl;
 
         viewer.showCloud( segmented_cloud );
 
